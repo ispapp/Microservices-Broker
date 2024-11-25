@@ -1,0 +1,49 @@
+syntax = "proto3";
+package base.proto;
+option go_package = "./base/pb";
+import "google/protobuf/timestamp.proto";
+message Message {
+  bytes data = 1;
+  Type type = 2;
+  google.protobuf.Timestamp seq = 5;
+  string from = 6;
+  string to = 7;
+  Event event = 8;
+  bool done = 9;
+}
+enum Type {
+  MP4 = 0;
+  MP3 = 1;
+  JPG = 2;
+  PNG = 3;
+  JSON = 4;
+  XML = 5;
+  HTML = 6;
+  TEXT = 7;
+  OTHER = 8;
+}
+
+enum Event {
+  STREAM = 0;
+  MESSAGE = 1;
+  ERROR = 2;
+}
+
+enum Error {
+  NONE = 0;
+  UNKNOWN = 1;
+  INVALID_REQUEST = 2;
+  SERVER_ERROR = 3;
+}
+
+message Status {
+  string message = 1;
+  bool success = 2;
+  Error error = 3;
+}
+message Empty {};
+service Bidistreamer {
+  rpc Send(stream Message) returns (Status) {};// Send a message to the broker
+  rpc BidiStream(stream Message) returns (stream Message) {};// Send and receive messages from the broker
+  rpc Receive(Empty) returns (stream Message) {};// Receive messages from the broker
+}

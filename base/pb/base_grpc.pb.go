@@ -14,94 +14,48 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// BidistreamerClient is the client API for Bidistreamer service.
+// BrokerClient is the client API for Broker service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type BidistreamerClient interface {
-	Send(ctx context.Context, opts ...grpc.CallOption) (Bidistreamer_SendClient, error)
-	BidiStream(ctx context.Context, opts ...grpc.CallOption) (Bidistreamer_BidiStreamClient, error)
-	Receive(ctx context.Context, in *Empty, opts ...grpc.CallOption) (Bidistreamer_ReceiveClient, error)
+type BrokerClient interface {
+	Ping(ctx context.Context, in *Identity, opts ...grpc.CallOption) (*Status, error)
+	Send(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Status, error)
+	Receive(ctx context.Context, in *Identity, opts ...grpc.CallOption) (Broker_ReceiveClient, error)
+	Cleanup(ctx context.Context, in *Identity, opts ...grpc.CallOption) (*Status, error)
 }
 
-type bidistreamerClient struct {
+type brokerClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewBidistreamerClient(cc grpc.ClientConnInterface) BidistreamerClient {
-	return &bidistreamerClient{cc}
+func NewBrokerClient(cc grpc.ClientConnInterface) BrokerClient {
+	return &brokerClient{cc}
 }
 
-func (c *bidistreamerClient) Send(ctx context.Context, opts ...grpc.CallOption) (Bidistreamer_SendClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Bidistreamer_ServiceDesc.Streams[0], "/base.proto.Bidistreamer/Send", opts...)
+func (c *brokerClient) Ping(ctx context.Context, in *Identity, opts ...grpc.CallOption) (*Status, error) {
+	out := new(Status)
+	err := c.cc.Invoke(ctx, "/base.proto.Broker/Ping", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &bidistreamerSendClient{stream}
-	return x, nil
+	return out, nil
 }
 
-type Bidistreamer_SendClient interface {
-	Send(*Message) error
-	CloseAndRecv() (*Status, error)
-	grpc.ClientStream
-}
-
-type bidistreamerSendClient struct {
-	grpc.ClientStream
-}
-
-func (x *bidistreamerSendClient) Send(m *Message) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *bidistreamerSendClient) CloseAndRecv() (*Status, error) {
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	m := new(Status)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *bidistreamerClient) BidiStream(ctx context.Context, opts ...grpc.CallOption) (Bidistreamer_BidiStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Bidistreamer_ServiceDesc.Streams[1], "/base.proto.Bidistreamer/BidiStream", opts...)
+func (c *brokerClient) Send(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Status, error) {
+	out := new(Status)
+	err := c.cc.Invoke(ctx, "/base.proto.Broker/Send", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &bidistreamerBidiStreamClient{stream}
-	return x, nil
+	return out, nil
 }
 
-type Bidistreamer_BidiStreamClient interface {
-	Send(*Message) error
-	Recv() (*Message, error)
-	grpc.ClientStream
-}
-
-type bidistreamerBidiStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *bidistreamerBidiStreamClient) Send(m *Message) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *bidistreamerBidiStreamClient) Recv() (*Message, error) {
-	m := new(Message)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *bidistreamerClient) Receive(ctx context.Context, in *Empty, opts ...grpc.CallOption) (Bidistreamer_ReceiveClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Bidistreamer_ServiceDesc.Streams[2], "/base.proto.Bidistreamer/Receive", opts...)
+func (c *brokerClient) Receive(ctx context.Context, in *Identity, opts ...grpc.CallOption) (Broker_ReceiveClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Broker_ServiceDesc.Streams[0], "/base.proto.Broker/Receive", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &bidistreamerReceiveClient{stream}
+	x := &brokerReceiveClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -111,16 +65,16 @@ func (c *bidistreamerClient) Receive(ctx context.Context, in *Empty, opts ...grp
 	return x, nil
 }
 
-type Bidistreamer_ReceiveClient interface {
+type Broker_ReceiveClient interface {
 	Recv() (*Message, error)
 	grpc.ClientStream
 }
 
-type bidistreamerReceiveClient struct {
+type brokerReceiveClient struct {
 	grpc.ClientStream
 }
 
-func (x *bidistreamerReceiveClient) Recv() (*Message, error) {
+func (x *brokerReceiveClient) Recv() (*Message, error) {
 	m := new(Message)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -128,137 +82,154 @@ func (x *bidistreamerReceiveClient) Recv() (*Message, error) {
 	return m, nil
 }
 
-// BidistreamerServer is the server API for Bidistreamer service.
-// All implementations must embed UnimplementedBidistreamerServer
+func (c *brokerClient) Cleanup(ctx context.Context, in *Identity, opts ...grpc.CallOption) (*Status, error) {
+	out := new(Status)
+	err := c.cc.Invoke(ctx, "/base.proto.Broker/Cleanup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// BrokerServer is the server API for Broker service.
+// All implementations must embed UnimplementedBrokerServer
 // for forward compatibility
-type BidistreamerServer interface {
-	Send(Bidistreamer_SendServer) error
-	BidiStream(Bidistreamer_BidiStreamServer) error
-	Receive(*Empty, Bidistreamer_ReceiveServer) error
-	mustEmbedUnimplementedBidistreamerServer()
+type BrokerServer interface {
+	Ping(context.Context, *Identity) (*Status, error)
+	Send(context.Context, *Message) (*Status, error)
+	Receive(*Identity, Broker_ReceiveServer) error
+	Cleanup(context.Context, *Identity) (*Status, error)
+	mustEmbedUnimplementedBrokerServer()
 }
 
-// UnimplementedBidistreamerServer must be embedded to have forward compatible implementations.
-type UnimplementedBidistreamerServer struct {
+// UnimplementedBrokerServer must be embedded to have forward compatible implementations.
+type UnimplementedBrokerServer struct {
 }
 
-func (UnimplementedBidistreamerServer) Send(Bidistreamer_SendServer) error {
-	return status.Errorf(codes.Unimplemented, "method Send not implemented")
+func (UnimplementedBrokerServer) Ping(context.Context, *Identity) (*Status, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedBidistreamerServer) BidiStream(Bidistreamer_BidiStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method BidiStream not implemented")
+func (UnimplementedBrokerServer) Send(context.Context, *Message) (*Status, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Send not implemented")
 }
-func (UnimplementedBidistreamerServer) Receive(*Empty, Bidistreamer_ReceiveServer) error {
+func (UnimplementedBrokerServer) Receive(*Identity, Broker_ReceiveServer) error {
 	return status.Errorf(codes.Unimplemented, "method Receive not implemented")
 }
-func (UnimplementedBidistreamerServer) mustEmbedUnimplementedBidistreamerServer() {}
+func (UnimplementedBrokerServer) Cleanup(context.Context, *Identity) (*Status, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Cleanup not implemented")
+}
+func (UnimplementedBrokerServer) mustEmbedUnimplementedBrokerServer() {}
 
-// UnsafeBidistreamerServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to BidistreamerServer will
+// UnsafeBrokerServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to BrokerServer will
 // result in compilation errors.
-type UnsafeBidistreamerServer interface {
-	mustEmbedUnimplementedBidistreamerServer()
+type UnsafeBrokerServer interface {
+	mustEmbedUnimplementedBrokerServer()
 }
 
-func RegisterBidistreamerServer(s grpc.ServiceRegistrar, srv BidistreamerServer) {
-	s.RegisterService(&Bidistreamer_ServiceDesc, srv)
+func RegisterBrokerServer(s grpc.ServiceRegistrar, srv BrokerServer) {
+	s.RegisterService(&Broker_ServiceDesc, srv)
 }
 
-func _Bidistreamer_Send_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(BidistreamerServer).Send(&bidistreamerSendServer{stream})
-}
-
-type Bidistreamer_SendServer interface {
-	SendAndClose(*Status) error
-	Recv() (*Message, error)
-	grpc.ServerStream
-}
-
-type bidistreamerSendServer struct {
-	grpc.ServerStream
-}
-
-func (x *bidistreamerSendServer) SendAndClose(m *Status) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *bidistreamerSendServer) Recv() (*Message, error) {
-	m := new(Message)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
+func _Broker_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Identity)
+	if err := dec(in); err != nil {
 		return nil, err
 	}
-	return m, nil
+	if interceptor == nil {
+		return srv.(BrokerServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/base.proto.Broker/Ping",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BrokerServer).Ping(ctx, req.(*Identity))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _Bidistreamer_BidiStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(BidistreamerServer).BidiStream(&bidistreamerBidiStreamServer{stream})
-}
-
-type Bidistreamer_BidiStreamServer interface {
-	Send(*Message) error
-	Recv() (*Message, error)
-	grpc.ServerStream
-}
-
-type bidistreamerBidiStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *bidistreamerBidiStreamServer) Send(m *Message) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *bidistreamerBidiStreamServer) Recv() (*Message, error) {
-	m := new(Message)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
+func _Broker_Send_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
 		return nil, err
 	}
-	return m, nil
+	if interceptor == nil {
+		return srv.(BrokerServer).Send(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/base.proto.Broker/Send",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BrokerServer).Send(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
-func _Bidistreamer_Receive_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Empty)
+func _Broker_Receive_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Identity)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(BidistreamerServer).Receive(m, &bidistreamerReceiveServer{stream})
+	return srv.(BrokerServer).Receive(m, &brokerReceiveServer{stream})
 }
 
-type Bidistreamer_ReceiveServer interface {
+type Broker_ReceiveServer interface {
 	Send(*Message) error
 	grpc.ServerStream
 }
 
-type bidistreamerReceiveServer struct {
+type brokerReceiveServer struct {
 	grpc.ServerStream
 }
 
-func (x *bidistreamerReceiveServer) Send(m *Message) error {
+func (x *brokerReceiveServer) Send(m *Message) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-// Bidistreamer_ServiceDesc is the grpc.ServiceDesc for Bidistreamer service.
+func _Broker_Cleanup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Identity)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BrokerServer).Cleanup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/base.proto.Broker/Cleanup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BrokerServer).Cleanup(ctx, req.(*Identity))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Broker_ServiceDesc is the grpc.ServiceDesc for Broker service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Bidistreamer_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "base.proto.Bidistreamer",
-	HandlerType: (*BidistreamerServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+var Broker_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "base.proto.Broker",
+	HandlerType: (*BrokerServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Ping",
+			Handler:    _Broker_Ping_Handler,
+		},
+		{
+			MethodName: "Send",
+			Handler:    _Broker_Send_Handler,
+		},
+		{
+			MethodName: "Cleanup",
+			Handler:    _Broker_Cleanup_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Send",
-			Handler:       _Bidistreamer_Send_Handler,
-			ClientStreams: true,
-		},
-		{
-			StreamName:    "BidiStream",
-			Handler:       _Bidistreamer_BidiStream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-		{
 			StreamName:    "Receive",
-			Handler:       _Bidistreamer_Receive_Handler,
+			Handler:       _Broker_Receive_Handler,
 			ServerStreams: true,
 		},
 	},

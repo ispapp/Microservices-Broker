@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	pb "Microservices-Broker/base/pb"
+	"Microservices-Broker/base/pb"
 	"Microservices-Broker/cmd/lib"
+	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
@@ -29,14 +31,17 @@ var ServerCommand = &cli.Command{
 	},
 	Action: func(c *cli.Context) error {
 		port := c.String("port")
-		lis, err := net.Listen("tcp", ":"+port)
+		lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", port))
 		if err != nil {
 			log.Fatalf("failed to listen: %v", err)
 		}
-
+		input := c.String("input")
+		server, err := lib.NewServer(input, 60, 100, time.Hour*24)
+		if err != nil {
+			log.Fatalf("failed to create server: %v", err)
+		}
 		s := grpc.NewServer()
-		server := lib.Server{}
-		pb.RegisterBidistreamerServer(s, &server)
+		pb.RegisterBrokerServer(s, server)
 		log.Printf("server listening at %v", lis.Addr())
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("failed to serve: %v", err)

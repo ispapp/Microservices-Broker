@@ -2,7 +2,8 @@ package lib
 
 import (
 	"Microservices-Broker/base/pb"
-	"io"
+	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -13,26 +14,28 @@ import (
 )
 
 type Server struct {
-	pb.UnimplementedBidistreamerServer
+	pb.UnimplementedBrokerServer
 	db           *bitcask.Bitcask
 	mu           sync.Mutex
 	tickeSeconds int16
+	maxAge       time.Duration
 	maxStored    int32
-	clients      map[string]map[string]pb.Bidistreamer_ReceiveServer
-	bidiClient   map[string]map[string]pb.Bidistreamer_ReceiveServer
+	clients      sync.Map // Changed to sync.Map for atomic operations
 }
 
-func NewServer(dbPath string, TickeSeconds int16, MaxStored int32) (*Server, error) {
-	db, err := bitcask.Open(dbPath)
+var Utils = utils{}
+
+func NewServer(dbPath string, TickeSeconds int16, MaxStored int32, MaxAge time.Duration) (*Server, error) {
+	db, err := bitcask.Open(dbPath, bitcask.WithAutoRecovery(false), bitcask.WithDirMode(0700), bitcask.WithFileMode(0600))
 	if err != nil {
 		return nil, err
 	}
 	s := &Server{
 		db:           db,
 		tickeSeconds: TickeSeconds,
+		maxAge:       MaxAge,
 		maxStored:    MaxStored,
-		clients:      make(map[string]map[string]pb.Bidistreamer_ReceiveServer),
-		bidiClient:   make(map[string]map[string]pb.Bidistreamer_ReceiveServer),
+		clients:      sync.Map{},
 	}
 	go s.startCronJob()
 	return s, nil
@@ -46,146 +49,181 @@ func (s *Server) startCronJob() {
 }
 
 func (s *Server) checkMessageDelivery() {
-	s.mu.Lock()
+	if !s.mu.TryLock() {
+		return
+	}
 	defer s.mu.Unlock()
-	// Implement logic to check message delivery
-}
-
-func (s *Server) Send(stream pb.Bidistreamer_SendServer) error {
-	for {
-		msg, err := stream.Recv()
-		if err == io.EOF {
-			return stream.SendAndClose(&pb.Status{Message: "All messages received", Success: true, Error: pb.Error_NONE})
-		}
+	err := s.db.Scan(nil, bitcask.KeyFunc(func(key bitcask.Key) error {
+		value, err := s.db.Get(key)
 		if err != nil {
-			return stream.SendAndClose(&pb.Status{Message: err.Error(), Success: false, Error: pb.Error_SERVER_ERROR})
+			return err
 		}
-		log.Printf("Received message from %s to %s: %v", msg.From, msg.To, msg)
-		err = s.storeMessage(msg.From, msg)
-		if err != nil {
-			return stream.SendAndClose(&pb.Status{Message: err.Error(), Success: false, Error: pb.Error_SERVER_ERROR})
+		var msg pb.Message
+		if err := proto.Unmarshal(value, &msg); err != nil {
+			return err
 		}
-		// Check if recipient exists in clients map and send the message
-		s.mu.Lock()
-		if clients, exists := s.clients[msg.To]; exists {
-			for _, clientStream := range clients {
-				if err := clientStream.Send(msg); err != nil {
-					log.Printf("Failed to send message to %s: %v", msg.To, err)
-				}
+		if time.Since(msg.Seq.AsTime()) > s.maxAge {
+			if err := s.db.Delete(key); err != nil {
+				return err
 			}
+			log.Printf("Deleted expired message %s", key)
 		}
-		s.mu.Unlock()
+		return nil
+	}))
+	if err != nil {
+		log.Printf("Error during message cleanup: %v", err)
 	}
 }
 
-func (s *Server) BidiStream(stream pb.Bidistreamer_BidiStreamServer) error {
+func (s *Server) Ping(ctx context.Context, identity *pb.Identity) (*pb.Status, error) {
+	return &pb.Status{Message: "Pong", Success: true, Error: pb.Error_NONE}, nil
+}
 
-	for {
-		msg, err := stream.Recv()
-		md, ok := stream.Context().Value("metadata").(map[string]string)
-		if !ok {
-			return stream.Send(&pb.Message{Data: []byte("missing metadata"), Type: pb.Type_TEXT, Seq: timestamppb.Now(), From: "broker", To: "client"})
+func (s *Server) Send(ctx context.Context, msg *pb.Message) (*pb.Status, error) {
+	if msg.Data == nil || msg.From == "" || msg.To == "" {
+		return &pb.Status{Message: "Invalid message", Success: false, Error: pb.Error_INVALID_REQUEST}, nil
+	}
+	log.Printf("Received message from %s to %s", msg.From, msg.To)
+	// Check if recipient exists in clients map and send the message
+	if !s.mu.TryLock() {
+		return &pb.Status{Message: "Server busy", Success: false, Error: pb.Error_SERVER_ERROR}, nil
+	}
+	defer s.mu.Unlock()
+	if clientStream, exists := s.clients.Load(msg.To); exists {
+		// does not exist at the moment
+		log.Printf("Sending message to %s", msg.To)
+		if err := clientStream.(pb.Broker_ReceiveServer).Send(msg); err != nil {
+			log.Printf("Failed to send message to %s: %v", msg.To, err)
+			return &pb.Status{Message: err.Error(), Success: false, Error: pb.Error_SERVER_ERROR}, err
 		}
-		if err == io.EOF {
+		return &pb.Status{Message: "Message sent", Success: true, Error: pb.Error_NONE}, nil
+	} else if msg.Queue {
+		log.Printf("Recipient %s not found, queuing message", msg.To)
+		// If recipient does not exist and message is marked for queue, store it
+		err := s.storeMessage(msg.To, msg)
+		if err != nil {
+			log.Printf("Failed to store queued message for %s: %v", msg.To, err)
+			return &pb.Status{Message: err.Error(), Success: false, Error: pb.Error_SERVER_ERROR}, err
+		}
+		return &pb.Status{Message: "Message queued", Success: true, Error: pb.Error_NONE}, nil
+	}
+	return &pb.Status{Message: "Recipient not found", Success: false, Error: pb.Error_NONE}, nil
+}
+
+func (s *Server) Receive(identity *pb.Identity, stream pb.Broker_ReceiveServer) error {
+	log.Printf("Client %s connected", identity.From)
+	if _, exists := s.clients.Load(identity.From); exists {
+		s.clients.Store(identity.From, stream)
+	}
+	for {
+		// Keep the connection alive
+		select {
+		case <-stream.Context().Done():
+			log.Printf("Client %s disconnected", identity.From)
+			s.clients.Delete(identity.From)
+
 			return nil
-		}
-		if err != nil {
-			return err
-		}
-		log.Printf("Received message from %s to %s: %v", msg.From, msg.To, msg)
-		clientID := md["X-CLIENT-ID"]
-		s.mu.Lock()
-		if _, exists := s.bidiClient[msg.From]; !exists {
-			s.bidiClient[msg.From] = make(map[string]pb.Bidistreamer_ReceiveServer)
-		}
-		s.bidiClient[msg.From][clientID] = stream
-		// Check if recipient exists in clients map and send the message
-		if clients, exists := s.clients[msg.To]; exists {
-			for _, clientStream := range clients {
-				if err := clientStream.Send(msg); err != nil {
-					log.Printf("Failed to send message to %s: %v", msg.To, err)
-				}
+		default:
+			err := s.GetMessages(identity, stream)
+			if err != nil {
+				log.Printf("Failed to get messages for %s: %v", identity.From, err)
+				stream.Send(&pb.Message{
+					Data: []byte(err.Error()),
+					Type: pb.Type_TEXT,
+					Seq:  timestamppb.Now(),
+					From: "broker", To: identity.From,
+					Event: pb.Event_ERROR})
+				return err
 			}
-		} else {
-			s.mu.Unlock()
-			return stream.Send(&pb.Message{Data: []byte("destination client not found"), Type: pb.Type_TEXT, Seq: timestamppb.Now(), From: "broker", To: msg.From})
-		}
-		s.mu.Unlock()
-
-		if err := stream.Send(msg); err != nil {
-			return err
+			time.Sleep(time.Second)
 		}
 	}
 }
 
-func (s *Server) Receive(empty *pb.Empty, stream pb.Bidistreamer_ReceiveServer) error {
-	// Implement your logic to receive messages from the broker
-	md, ok := stream.Context().Value("metadata").(map[string]string)
-	if !ok {
-		return stream.Send(&pb.Message{Data: []byte("missing metadata"), Type: pb.Type_TEXT, Seq: timestamppb.Now(), From: "broker", To: "client"})
+func (s *Server) GetMessages(identity *pb.Identity, stream pb.Broker_ReceiveServer) error {
+	serviceName := identity.From
+	if serviceName == "" {
+		return stream.Send(&pb.Message{Data: []byte("missing service name"), Type: pb.Type_TEXT, Seq: timestamppb.Now(), From: "broker", To: identity.From, Event: pb.Event_ERROR})
 	}
-	serviceName, exists := md["X-SERVICE-NAME"]
-	if !exists {
-		return stream.Send(&pb.Message{Data: []byte("missing X-SERVICE-NAME"), Type: pb.Type_TEXT, Seq: timestamppb.Now(), From: "broker", To: "client"})
-	}
-	clientID := md["X-CLIENT-ID"]
-	if _, exists := s.clients[serviceName]; !exists {
-		s.clients[serviceName] = make(map[string]pb.Bidistreamer_ReceiveServer)
-	}
-	s.clients[serviceName][clientID] = stream
-
-	// Check for existing messages in the database
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	// // Check for existing messages in the database
+	// if !s.mu.TryLock() {
+	// 	return fmt.Errorf("Server busy")
+	// }
+	// defer s.mu.Unlock()
 	err := s.db.Scan(bitcask.Key(serviceName+"_"), bitcask.KeyFunc(func(key bitcask.Key) error {
 		value, err := s.db.Get(key)
 		if err != nil {
 			return err
 		}
 		var msg pb.Message
-		if err := proto.Unmarshal(value, &msg); err != nil && !msg.Done {
+		if err := proto.Unmarshal(value, &msg); err != nil {
 			return err
 		}
 		if err := stream.Send(&msg); err != nil {
 			return err
 		} else {
-			key := bitcask.Key(serviceName + "_" + msg.Seq.String())
+			// Delete message from database after sending
 			if err := s.db.Delete(key); err != nil {
 				return err
 			}
+			log.Printf("deleted message %s", key)
 		}
 		return nil
 	}))
 	if err != nil {
 		return err
 	}
-
 	// Remove client from map when done
 	defer func() {
-		s.mu.Lock()
-		defer s.mu.Unlock()
-		delete(s.clients[serviceName], clientID)
-		if len(s.clients[serviceName]) == 0 {
-			delete(s.clients, serviceName)
-		}
+		s.clients.Delete(serviceName)
 	}()
-
 	return nil
 }
 
-func (s *Server) storeMessage(serviceName string, msg *pb.Message) error {
-	s.mu.Lock()
+func (s *Server) Cleanup(ctx context.Context, identity *pb.Identity) (*pb.Status, error) {
+	// Implement cleanup logic
+	if !s.mu.TryLock() {
+		return &pb.Status{Message: "Server busy", Success: false, Error: pb.Error_SERVER_ERROR}, nil
+	}
 	defer s.mu.Unlock()
+	serviceName := identity.From
+	if serviceName == "" {
+		return &pb.Status{Message: "missing service name", Success: false, Error: pb.Error_INVALID_REQUEST}, nil
+	}
+	var count int
+	err := s.db.Scan(bitcask.Key(serviceName+"_"), bitcask.KeyFunc(func(key bitcask.Key) error {
+		count++
+		return s.db.Delete(key)
+	}))
+	if err != nil {
+		return &pb.Status{Message: err.Error(), Success: false, Error: pb.Error_SERVER_ERROR}, err
+	}
+	return &pb.Status{Message: fmt.Sprintf("Cleanup completed (%d)", count), Success: true, Error: pb.Error_NONE}, nil
+}
+
+func (s *Server) storeMessage(serviceName string, msg *pb.Message) error {
 	// Store message in Bitcast DB
-	key := bitcask.Key(serviceName + "_" + msg.Seq.String())
-	value, _err := proto.Marshal(msg)
+	key := bitcask.Key(serviceName + "_" + Utils.uid(16))
+	_msg := &pb.Message{
+		Data:  msg.Data,
+		Type:  msg.Type,
+		From:  msg.From,
+		To:    msg.To,
+		Event: pb.Event_MESSAGE,
+		Seq:   timestamppb.Now(),
+	}
+	value, _err := proto.Marshal(_msg)
 	if _err != nil {
-		log.Printf("Failed to marshal message: %v", _err)
 		return _err
 	}
-	if err := s.db.Put(key, value); err != nil {
-		log.Printf("Failed to store message: %v", err)
-		return _err
+	if s.db != nil {
+		if err := s.db.Put(key, value); err != nil {
+			return err
+		}
+		s.db.Sync()
+	} else {
+		log.Printf("Database not initialized")
 	}
+	log.Printf("Message queued for %s", serviceName)
 	return nil
 }

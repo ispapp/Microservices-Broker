@@ -32,5 +32,4 @@ jobs:
               with:
                 files: bin/${{ matrix.file }}
                 name: ms_broker_${{github.ref_name}}
-              env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                token: ${{ secrets.MYTOKEN }}

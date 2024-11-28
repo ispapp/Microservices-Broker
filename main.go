@@ -1,9 +1,10 @@
 package main
 
 import (
-	"Microservices-Broker/cmd"
 	"log"
 	"os"
+
+	"github.com/kmoz000/Microservices-Broker/cmd"
 
 	"github.com/urfave/cli/v2"
 )

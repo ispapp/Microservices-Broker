@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package base.proto;
+
+option go_package = "./base/pb";
+
+import "google/protobuf/timestamp.proto";
+
+// Identity message represents the identity of a client.
+message Identity {
+  string from = 1;
+}
+
+// Message message represents a message with various attributes.
+message Message {
+  bytes data = 1;
+  Type type = 2;
+  google.protobuf.Timestamp seq = 5;
+  string from = 6;
+  string to = 7;
+  Event event = 8;
+  bool queue = 9;
+}
+
+// Type enum represents the type of the message data.
+enum Type {
+  MP4 = 0;
+  MP3 = 1;
+  JPG = 2;
+  PNG = 3;
+  JSON = 4;
+  XML = 5;
+  HTML = 6;
+  TEXT = 7;
+  OTHER = 8;
+}
+
+// Event enum represents the type of event.
+enum Event {
+  STREAM = 0;
+  MESSAGE = 1;
+  ERROR = 2;
+}
+
+// Error enum represents the type of error.
+enum Error {
+  NONE = 0;
+  UNKNOWN = 1;
+  INVALID_REQUEST = 2;
+  SERVER_ERROR = 3;
+}
+
+// Status message represents the status of an operation.
+message Status {
+  string message = 1;
+  bool success = 2;
+  Error error = 3;
+}
+
+// Broker service defines the RPC methods for the broker.
+service Broker {
+  rpc Ping(Identity) returns (Status) {} // Ping the broker
+  rpc Send(Message) returns (Status) {} // Send a message to the broker
+  rpc Receive(Identity) returns (stream Message) {} // Receive messages from the broker
+  rpc Cleanup(Identity) returns (Status) {} // Cleanup the broker
+}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"Microservices-Broker/base/pb"
+	"github.com/kmoz000/Microservices-Broker/base/pb"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -16,7 +16,7 @@ type ServiceClient struct {
 }
 
 func NewServiceClient(serviceName, serviceUrl string) (*ServiceClient, error) {
-	conn, err := grpc.Dial(serviceUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(serviceUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}

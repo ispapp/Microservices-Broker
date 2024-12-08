@@ -6,8 +6,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/kmoz000/Microservices-Broker/base/pb"
-	"github.com/kmoz000/Microservices-Broker/cmd/lib"
+	"github.com/ispapp/Microservices-Broker/base/pb"
+	"github.com/ispapp/Microservices-Broker/cmd/lib"
 
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kmoz000/Microservices-Broker/base/pb"
+	"github.com/ispapp/Microservices-Broker/base/pb"
 
 	"go.mills.io/bitcask/v2"
 	"google.golang.org/protobuf/proto"

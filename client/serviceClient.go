@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/kmoz000/Microservices-Broker/base/pb"
+	"github.com/ispapp/Microservices-Broker/base/pb"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

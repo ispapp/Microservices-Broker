@@ -3,7 +3,6 @@ module github.com/ispapp/Microservices-Broker
 go 1.23.3
 
 require (
-	github.com/kmoz000/Microservices-Broker v0.0.0-20241208220211-1168be428a7b
 	github.com/urfave/cli/v2 v2.27.5
 	go.mills.io/bitcask/v2 v2.1.1
 	google.golang.org/grpc v1.68.1

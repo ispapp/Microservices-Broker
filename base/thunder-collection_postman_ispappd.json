@@ -1,0 +1,126 @@
+{
+    "info": {
+        "_postman_id": "8fb738f5-9f1b-46e0-b2f5-b6dc185d80a7",
+        "name": "ispappd",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "description": ""
+    },
+    "item": [
+        {
+            "name": "uuid",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{host}}:{{port}}/auth/uuid",
+                    "path": [
+                        "auth",
+                        "uuid"
+                    ],
+                    "host": [
+                        "{{host}}"
+                    ],
+                    "port": "{{port}}"
+                }
+            }
+        },
+        {
+            "name": "initConfig",
+            "request": {
+                "method": "POST",
+                "url": {
+                    "raw": "{{host}}:{{port}}/initconfig?login=2d00ac77-bccc-430f-97a3-070264ccd132&key=etDvf0bISZ0ggkqd",
+                    "query": [
+                        {
+                            "key": "login",
+                            "value": "2d00ac77-bccc-430f-97a3-070264ccd132"
+                        },
+                        {
+                            "key": "key",
+                            "value": "etDvf0bISZ0ggkqd"
+                        }
+                    ],
+                    "variable": [],
+                    "path": [
+                        "initconfig?login=2d00ac77-bccc-430f-97a3-070264ccd132&key=etDvf0bISZ0ggkqd"
+                    ],
+                    "host": [
+                        "{{host}}"
+                    ],
+                    "port": "{{port}}"
+                },
+                "body": {
+                    "mode": "raw",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    },
+                    "raw": "{\n  \"outsideIp\": \"196.112.59.233\",\n  \"webshellSupport\": true,\n  \"fw\": \"FIRMWARE-2167-202407161750\",\n  \"lastConfigRequest\": 1721296274,\n  \"osVersion\": \"19.07-SNAPSHOT\",\n  \"hardwareCpuInfo\": \"ARMv7 Processor rev 4 (v7l), 4 cores\",\n  \"hostname\": \"OpenWrt\",\n  \"hardwareModelNumber\": \"Qualcomm Technologies, Inc. IPQ5332/AP-MI01.12\",\n  \"hardwareMake\": \"qcom,ipq5332-ap-mi01.12\",\n  \"bandwidthTestSupport\": true,\n  \"clientInfo\": \"OpenWrt-19.07-SNAPSHOT\",\n  \"os\": \"19.07-snapshot\",\n  \"wirelessConfigured\": [\n    {\n      \".id\": \"*1\",\n      \"disabled\": false,\n      \"mac-address\": \"c4:4b:d1:c0:06:88\",\n      \"interface-type\": \"qcawificfg80211\",\n      \"if\": \"wifinet0\",\n      \"technology\": \"uci\",\n      \"master-interface\": \"qcawificfg80211\",\n      \"running\": true,\n      \"name\": \"wifinet0\",\n      \"ssid\": \"Longshot MLOv2 2.4Ghz\",\n      \"key\": \"langshot\",\n      \"band\": \"2.4ghz-ofdm\",\n      \"security-profile\": \"*1\",\n      \"hide-ssid\": false\n    },\n    {\n      \".id\": \"*3\",\n      \"disabled\": false,\n      \"mac-address\": \"c4:4b:d1:c0:06:89\",\n      \"interface-type\": \"qcawificfg80211\",\n      \"if\": \"wifinet1\",\n      \"technology\": \"uci\",\n      \"master-interface\": \"qcawificfg80211\",\n      \"running\": true,\n      \"name\": \"wifinet1\",\n      \"ssid\": \"Longshot MLOv2\",\n      \"key\": \"langshot\",\n      \"band\": \"2.4/5/6ghz-eht-ofdma\",\n      \"security-profile\": \"*3\",\n      \"hide-ssid\": false\n    },\n    {\n      \".id\": \"*5\",\n      \"disabled\": false,\n      \"mac-address\": \"c4:4b:d1:c0:06:8a\",\n      \"interface-type\": \"qcawificfg80211\",\n      \"if\": \"wifinet2\",\n      \"technology\": \"uci\",\n      \"master-interface\": \"qcawificfg80211\",\n      \"running\": true,\n      \"name\": \"wifinet2\",\n      \"ssid\": \"Longshot MLOv2\",\n      \"key\": \"langshot\",\n      \"band\": \"2.4/5/6ghz-eht-ofdma\",\n      \"security-profile\": \"*5\",\n      \"hide-ssid\": false\n    }\n  ],\n  \"interfaces\": [\n    {\n      \"foundDescriptor\": \"ubus parsed\",\n      \"defaultIf\": \"lo\",\n      \"sentDrops\": 0,\n      \"if\": \"lo\",\n      \"sentErrors\": 0,\n      \"recBytes\": 3804,\n      \"sentPackets\": 49,\n      \"recDrops\": 0,\n      \"carrierChanges\": 0,\n      \"recPackets\": 49,\n      \"recErrors\": 0,\n      \"mac\": \"00:00:00:00:00:00\",\n      \"sentBytes\": 3804\n    },\n    {\n      \"foundDescriptor\": \"ubus parsed\",\n      \"defaultIf\": \"br-lan\",\n      \"sentDrops\": 0,\n      \"if\": \"eth1\",\n      \"sentErrors\": 0,\n      \"recBytes\": 1119144,\n      \"sentPackets\": 7712,\n      \"recDrops\": 11,\n      \"carrierChanges\": 0,\n      \"recPackets\": 7702,\n      \"recErrors\": 0,\n      \"mac\": \"c4:4b:d1:c0:06:87\",\n      \"sentBytes\": 2387368\n    },\n    {\n      \"foundDescriptor\": \"ubus parsed\",\n      \"defaultIf\": \"br-lan\",\n      \"sentDrops\": 0,\n      \"if\": \"eth0\",\n      \"sentErrors\": 0,\n      \"recBytes\": 0,\n      \"sentPackets\": 0,\n      \"recDrops\": 0,\n      \"carrierChanges\": 0,\n      \"recPackets\": 0,\n      \"recErrors\": 0,\n      \"mac\": \"c4:4b:d1:c0:06:86\",\n      \"sentBytes\": 0\n    },\n    {\n      \"foundDescriptor\": \"ubus parsed\",\n      \"defaultIf\": \"br-lan\",\n      \"sentDrops\": 0,\n      \"if\": \"br-lan\",\n      \"sentErrors\": 0,\n      \"recBytes\": 982058,\n      \"sentPackets\": 7336,\n      \"recDrops\": 0,\n      \"carrierChanges\": 0,\n      \"recPackets\": 7684,\n      \"recErrors\": 0,\n      \"mac\": \"c4:4b:d1:c0:06:86\",\n      \"sentBytes\": 2334218\n    }\n  ],\n  \"wirelessSupport\": true,\n  \"hardwareSerialNumber\": \"0000000000000000\",\n  \"osBuildDate\": 1721295876,\n  \"sequenceNumber\": 1,\n  \"Lng\": -7.613300,\n  \"uptime\": 420,\n  \"security-profiles\": [\n    {\n      \".id\": \"*1\",\n      \"wpa-pre-shared-key\": \"langshot\",\n      \"technology\": \"wireless\",\n      \"name\": \"wifinet0\",\n      \"default\": false,\n      \"authentication-types\": [\n        \"sae\"\n      ],\n      \"mode\": \"sta\",\n      \"wpa2-pre-shared-key\": \"langshot\",\n      \"wpa3-pre-shared-key\": \"langshot\"\n    },\n    {\n      \".id\": \"*3\",\n      \"wpa-pre-shared-key\": \"langshot\",\n      \"technology\": \"wireless\",\n      \"name\": \"wifinet1\",\n      \"default\": false,\n      \"authentication-types\": [\n        \"sae\"\n      ],\n      \"mode\": \"sta\",\n      \"wpa2-pre-shared-key\": \"langshot\",\n      \"wpa3-pre-shared-key\": \"langshot\"\n    },\n    {\n      \".id\": \"*5\",\n      \"wpa-pre-shared-key\": \"langshot\",\n      \"technology\": \"wireless\",\n      \"name\": \"wifinet2\",\n      \"default\": false,\n      \"authentication-types\": [\n        \"sae\"\n      ],\n      \"mode\": \"sta\",\n      \"wpa2-pre-shared-key\": \"langshot\",\n      \"wpa3-pre-shared-key\": \"langshot\"\n    }\n  ],\n  \"firmwareUpgradeSupport\": true,\n  \"lat\": 33.579200,\n  \"usingWebSocket\": false,\n  \"hardwareModel\": \"Qualcomm Technologies, Inc. IPQ5332/AP-MI01.12\"\n}"
+                }
+            }
+        },
+        {
+            "name": "refrech",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{host}}:{{port}}//auth/refresh?login=bfd41429-9dff-4e39-a927-45caaa9f61fa&key=a9AHG6IjDgb8l4ps",
+                    "query": [
+                        {
+                            "key": "login",
+                            "value": "bfd41429-9dff-4e39-a927-45caaa9f61fa"
+                        },
+                        {
+                            "key": "key",
+                            "value": "a9AHG6IjDgb8l4ps"
+                        }
+                    ],
+                    "variable": [],
+                    "path": [
+                        "",
+                        "auth",
+                        "refresh?login=bfd41429-9dff-4e39-a927-45caaa9f61fa&key=a9AHG6IjDgb8l4ps"
+                    ],
+                    "host": [
+                        "{{host}}"
+                    ],
+                    "port": "{{port}}"
+                }
+            }
+        },
+        {
+            "name": "group",
+            "request": {
+                "method": "POST",
+                "url": {
+                    "raw": "https://localhost/api/v1/group?sessionKey=c70b088a46630dddda93d03e21522ee2ea090d390f8ad33bfa6e6d2c2f42b470ba752f14748b6dbaba1057c462acab783a0b6d176ce0436985c1adad5244b69a",
+                    "query": [
+                        {
+                            "key": "sessionKey",
+                            "value": "c70b088a46630dddda93d03e21522ee2ea090d390f8ad33bfa6e6d2c2f42b470ba752f14748b6dbaba1057c462acab783a0b6d176ce0436985c1adad5244b69a"
+                        }
+                    ],
+                    "variable": [],
+                    "path": [
+                        "api",
+                        "v1",
+                        "group"
+                    ],
+                    "protocol": "https",
+                    "host": [
+                        "localhost"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    },
+                    "raw": "{\"name\":\"OK\",\"notes\":\"sd\",\"zoneId\":\"670f10094d16ff000d5dd0fd\"}"
+                }
+            }
+        }
+    ]
+}

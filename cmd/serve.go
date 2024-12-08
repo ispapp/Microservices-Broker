@@ -29,10 +29,17 @@ var ServerCommand = &cli.Command{
 			Usage:   "Port to serve on",
 			Value:   "50011",
 		},
+		&cli.StringFlag{
+			Name:    "host",
+			Aliases: []string{"h"},
+			Usage:   "Host to listen on",
+			Value:   "0.0.0.0",
+		},
 	},
 	Action: func(c *cli.Context) error {
 		port := c.String("port")
-		lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", port))
+		host := c.String("host")
+		lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", host, port))
 		if err != nil {
 			log.Fatalf("failed to listen: %v", err)
 		}

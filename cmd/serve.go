@@ -31,7 +31,7 @@ var ServerCommand = &cli.Command{
 		},
 		&cli.StringFlag{
 			Name:    "host",
-			Aliases: []string{"h"},
+			Aliases: []string{"H"},
 			Usage:   "Host to listen on",
 			Value:   "0.0.0.0",
 		},

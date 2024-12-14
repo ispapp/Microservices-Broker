@@ -11,8 +11,9 @@ import (
 
 func main() {
 	app := &cli.App{
-		Name:  "Microservices Broker",
-		Usage: "Simple Microservices Broker",
+		Name:           "Microservices Broker",
+		Usage:          "Simple Microservices Broker",
+		DefaultCommand: "serve",
 		Commands: []*cli.Command{
 			cmd.ServerCommand,
 		},

@@ -128,7 +128,7 @@ func (am *AuthManager) UnaryInterceptor() grpc.UnaryServerInterceptor {
 		}
 
 		// Add service name to context for use in handlers
-		ctx = context.WithValue(ctx, "service_name", serviceName)
+		ctx = context.WithValue(ctx, serviceNameCtxKey{}, serviceName)
 		return handler(ctx, req)
 	}
 }
@@ -147,7 +147,7 @@ func (am *AuthManager) StreamInterceptor() grpc.StreamServerInterceptor {
 		}
 
 		// Create a new context with service name
-		ctx := context.WithValue(ss.Context(), "service_name", serviceName)
+		ctx := context.WithValue(ss.Context(), serviceNameCtxKey{}, serviceName)
 		wrapped := &wrappedStream{ss, ctx}
 		return handler(srv, wrapped)
 	}
@@ -217,9 +217,12 @@ func generateRandomKey(length int) string {
 	return hex.EncodeToString(bytes)
 }
 
+// serviceNameCtxKey is a custom type for context keys to avoid collisions
+type serviceNameCtxKey struct{}
+
 // GetServiceNameFromContext extracts service name from context
 func GetServiceNameFromContext(ctx context.Context) string {
-	if serviceName, ok := ctx.Value("service_name").(string); ok {
+	if serviceName, ok := ctx.Value(serviceNameCtxKey{}).(string); ok {
 		return serviceName
 	}
 	return ""

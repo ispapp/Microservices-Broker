@@ -191,8 +191,10 @@ var AuthCommand = &cli.Command{
 				output := c.String("output")
 				configPath := c.String("config")
 				var authConfig *lib.AuthConfig
+				var cfg *lib.Config
+				var err error
 				if configPath != "" {
-					cfg, err := lib.LoadConfig(configPath)
+					cfg, err = lib.LoadConfig(configPath)
 					if err == nil {
 						authConfig = &cfg.Auth
 					}
@@ -200,6 +202,10 @@ var AuthCommand = &cli.Command{
 				finalKey, err := lib.WriteOrUpdateBrokerKeyYAMLWithAutoKey(output, name, key, authConfig)
 				if err != nil {
 					return fmt.Errorf("failed to write/update YAML config: %w", err)
+				}
+				// Save the updated config
+				if err := cfg.SaveConfig(configPath); err != nil {
+					return fmt.Errorf("failed to save config: %w", err)
 				}
 				fmt.Printf("Provisioned/updated broker YAML config at %s for service '%s' with key: %s\n", output, name, finalKey)
 				return nil

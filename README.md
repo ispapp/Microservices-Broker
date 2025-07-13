@@ -26,4 +26,4 @@ go run main.go serve --port <your_port>
 
 ## Flags
 - `--input, -i`: Input db folder (default: broker.db)
-- `--port, -p`: Port to serve on (default: 50011)
+- `--port, -p`: Port to serve on (default: 9000)

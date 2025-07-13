@@ -2,5 +2,5 @@ node_modules/
 dist/
 broker.db/
 tmp/main.exe
-config.json
-config.yml
+*.json
+*.yml

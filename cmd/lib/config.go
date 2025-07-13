@@ -104,8 +104,9 @@ func GenerateDefaultConfig(configPath string) error {
 			AuthMethod: AuthMethodJWT,
 			JWTSecret:  generateRandomKey(32),
 			APIKeys: map[string]string{
-				generateRandomKey(32): "service-1",
-				generateRandomKey(32): "service-2",
+				generateRandomKey(32): "CollectorService",
+				generateRandomKey(32): "DeliveryService",
+				// Add more default services as needed
 			},
 		},
 		DB: DBConfig{

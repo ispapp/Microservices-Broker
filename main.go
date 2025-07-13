@@ -16,6 +16,8 @@ func main() {
 		DefaultCommand: "serve",
 		Commands: []*cli.Command{
 			cmd.ServerCommand,
+			cmd.ConfigCommand,
+			cmd.AuthCommand,
 		},
 	}
 

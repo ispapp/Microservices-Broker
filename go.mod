@@ -3,10 +3,12 @@ module github.com/ispapp/Microservices-Broker
 go 1.23.3
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/urfave/cli/v2 v2.27.5
 	go.mills.io/bitcask/v2 v2.1.1
 	google.golang.org/grpc v1.68.1
 	google.golang.org/protobuf v1.35.2
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -15,8 +17,10 @@ require (
 	github.com/gofrs/flock v0.12.1 // indirect
 	github.com/hashicorp/go-immutable-radix/v2 v2.1.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mattetti/filebuffer v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect

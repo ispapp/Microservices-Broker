@@ -1,4 +1,4 @@
-package examples
+package test
 
 import (
 	"context"
@@ -45,7 +45,7 @@ func NewAuthenticatedClient(address, serviceName, authMethod string, useTLS bool
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
-	conn, err := grpc.NewClient(address, opts...)
+	conn, err := grpc.Dial(address, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect: %w", err)
 	}

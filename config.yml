@@ -1,0 +1,5 @@
+brokers:
+    - name: test1
+      key: 007c78db88390f3e0fbe8e69ecada39e719c1bc4e0414cd928e98f5b48c94d7a
+    - name: test2
+      key: 2aa50c4ae2061c1019efc9e8760a932d784449350c0103218c39926739eba5ea

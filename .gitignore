@@ -2,3 +2,4 @@ node_modules/
 dist/
 broker.db/
 tmp/main.exe
+cmd/lib/config.go

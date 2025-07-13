@@ -183,13 +183,17 @@ func WriteOrUpdateBrokerKeyYAML(filePath, name, key string) error {
 	return os.WriteFile(filePath, data, 0600)
 }
 
-// WriteOrUpdateBrokerKeyYAMLWithAutoKey adds/updates a broker in YAML, generating a key if missing
-// If key is empty, it will check config.Auth.APIKeys for the service or generate a new one
+// WriteOrUpdateBrokerKeyYAMLWithAutoKey adds/updates a service key in YAML, generating a key if missing
+// Only the 'services' key is updated; all other YAML content is preserved.
 func WriteOrUpdateBrokerKeyYAMLWithAutoKey(filePath, name, key string, authConfig *AuthConfig) (string, error) {
-	var cfg MultiBrokerYAMLConfig
+	// Read existing YAML as a generic map
+	var root map[string]interface{}
 	if data, err := os.ReadFile(filePath); err == nil {
-		yaml.Unmarshal(data, &cfg)
+		yaml.Unmarshal(data, &root)
+	} else {
+		root = make(map[string]interface{})
 	}
+
 	// If key is empty, check AuthConfig or generate
 	if key == "" && authConfig != nil {
 		for k, svc := range authConfig.APIKeys {
@@ -203,21 +207,17 @@ func WriteOrUpdateBrokerKeyYAMLWithAutoKey(filePath, name, key string, authConfi
 			key = am.GenerateAPIKey(name)
 		}
 	}
-	updated := false
-	for i, b := range cfg.Brokers {
-		if b.Name == name {
-			cfg.Brokers[i].Key = key
-			updated = true
-			break
-		}
+
+	// Update or create the 'services' map
+	services, ok := root["services"].(map[string]interface{})
+	if !ok {
+		services = make(map[string]interface{})
 	}
-	if !updated {
-		cfg.Brokers = append(cfg.Brokers, struct {
-			Name string `yaml:"name"`
-			Key  string `yaml:"key"`
-		}{Name: name, Key: key})
-	}
-	data, err := yaml.Marshal(&cfg)
+	services[name] = key
+	root["services"] = services
+
+	// Marshal and write back
+	data, err := yaml.Marshal(root)
 	if err != nil {
 		return "", err
 	}

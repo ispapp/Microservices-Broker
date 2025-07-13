@@ -1,7 +1,7 @@
 {
   "server": {
     "host": "0.0.0.0",
-    "port": "50011",
+    "port": "9000",
     "tls_enabled": false,
     "tls_cert_file": "server.crt",
     "tls_key_file": "server.key",
@@ -10,14 +10,14 @@
     "max_age": 86400000000000
   },
   "auth": {
-    "JWTSecret": "6bbc3c720d584f102f5d105a85992364b15bb43cc15150baa0e5182b4c90bbf2",
+    "JWTSecret": "56beae9cdd7743524e12e2b287764897ff5cc2a6f7a799af23470b2249e779f7",
     "APIKeys": {
-      "dc666193dfce13f46a820706725a59ba3e5b790e3da02848775909d0739745c8": "service-1",
-      "eb0f0264aebba8aacb6069c6f7d3b05ea90c24b497b4c3b4f37134f922382915": "service-2"
+      "537154f60d8202cd4dd73f161a2a5d9075cc31e5e38fe02d1306cd396acb08f4": "service-1",
+      "6445df5d9ba6b7e621ec2a94c55b0abd1e7e2867dc48a5ccd1d967d25e6bbe34": "service-2"
     },
     "TokenExpiry": 0,
     "EnableAuth": true,
-    "AuthMethod": 0
+    "AuthMethod": 1
   },
   "database": {
     "path": "broker.db"

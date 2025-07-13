@@ -39,7 +39,7 @@ func LoadConfig(configPath string) (*Config, error) {
 	config := &Config{
 		Server: ServerConfig{
 			Host:        "0.0.0.0",
-			Port:        "50011",
+			Port:        "9000",
 			TLSEnabled:  false,
 			TickSeconds: 60,
 			MaxStored:   100,
@@ -91,7 +91,7 @@ func GenerateDefaultConfig(configPath string) error {
 	config := &Config{
 		Server: ServerConfig{
 			Host:        "0.0.0.0",
-			Port:        "50011",
+			Port:        "9000",
 			TLSEnabled:  false,
 			TLSCertFile: "server.crt",
 			TLSKeyFile:  "server.key",

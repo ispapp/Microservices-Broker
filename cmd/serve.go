@@ -29,7 +29,7 @@ var ServerCommand = &cli.Command{
 			Name:    "port",
 			Aliases: []string{"p"},
 			Usage:   "Port to serve on",
-			Value:   "50011",
+			Value:   "9000",
 		},
 		&cli.StringFlag{
 			Name:    "host",

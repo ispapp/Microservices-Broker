@@ -63,8 +63,12 @@ func LoadConfig(configPath string) (*Config, error) {
 				return nil, fmt.Errorf("failed to read config file: %w", err)
 			}
 
+			// Try JSON first
 			if err := json.Unmarshal(data, config); err != nil {
-				return nil, fmt.Errorf("failed to parse config file: %w", err)
+				// If JSON fails, try YAML
+				if err := yaml.Unmarshal(data, config); err != nil {
+					return nil, fmt.Errorf("failed to parse config file as JSON or YAML: %w", err)
+				}
 			}
 		}
 	}
